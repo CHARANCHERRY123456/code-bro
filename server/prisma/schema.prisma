@@ -1,0 +1,169 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// ----- ENUMS -----
+enum RootRole {
+  ADMIN
+  USER
+}
+
+enum FileRole {
+  EDITOR
+  VIEWER
+  COMMENTER
+}
+
+enum ProjectRole {
+  PROJECT_OWNER
+  PROJECT_MAINTAINER
+  PROJECT_CONTRIBUTOR
+  PROJECT_VIEWER
+}
+
+enum AuditAction {
+  CREATE
+  EDIT
+  DELETE
+  VIEW
+}
+
+/// ----- MODELS -----
+
+model User {
+  id                 Int                   @id @default(autoincrement())
+  name               String
+  email              String                @unique
+  password           String
+  rootRole           RootRole              @default(USER)
+  createdAt          DateTime              @default(now())
+  updatedAt          DateTime              @updatedAt
+
+  // Relations
+  ownedProjects      Project[]             @relation("ProjectOwner")
+  memberships        ProjectMembership[]
+  fileAccesses       FileAccess[]
+  fileVersions       FileVersion[]         @relation("FileVersionCreatedBy")
+  auditLogs          AuditLog[]            @relation("AuditLogUser")
+}
+
+model Project {
+  id                 Int                   @id @default(autoincrement())
+  name               String
+  description        String?
+  ownerId            Int
+  createdAt          DateTime              @default(now())
+  updatedAt          DateTime              @updatedAt
+
+  // Relations
+  owner              User                  @relation("ProjectOwner", fields: [ownerId], references: [id])
+  memberships        ProjectMembership[]
+  folders            Folder[]
+  auditLogs          AuditLog[]            @relation("AuditLogProject")
+}
+
+model ProjectMembership {
+  id                 Int                   @id @default(autoincrement())
+  userId             Int
+  projectId          Int
+  joinedAt           DateTime              @default(now())
+  projectRole        ProjectRole           @default(PROJECT_CONTRIBUTOR)
+
+  // Relations
+  user               User                  @relation(fields: [userId], references: [id])
+  project            Project               @relation(fields: [projectId], references: [id])
+
+  @@unique([userId, projectId])
+  @@index([projectId])
+  @@index([userId])
+}
+
+model Folder {
+  id                 Int                   @id @default(autoincrement())
+  name               String
+  projectId          Int
+  parentFolderId     Int? 
+  createdAt          DateTime              @default(now())
+  updatedAt          DateTime              @updatedAt
+
+  // Relations
+  project            Project               @relation(fields: [projectId], references: [id])
+  parentFolder       Folder?               @relation("FolderHierarchy", fields: [parentFolderId], references: [id])
+  subFolders         Folder[]              @relation("FolderHierarchy")
+  files              File[]
+
+  @@index([projectId])
+  @@index([parentFolderId])
+}
+
+model File {
+  id                 Int                   @id @default(autoincrement())
+  name               String
+  folderId           Int
+  content            String?
+  createdAt          DateTime              @default(now())
+  updatedAt          DateTime              @updatedAt
+
+  // Relations
+  folder             Folder                @relation(fields: [folderId], references: [id])
+  access             FileAccess[]
+  versions           FileVersion[]
+  auditLogs          AuditLog[]            @relation("AuditLogFile")
+
+  @@index([folderId])
+}
+
+model FileAccess {
+  id                 Int                   @id @default(autoincrement())
+  fileId             Int
+  userId             Int
+  role               FileRole
+  grantedAt          DateTime              @default(now())
+
+  // Relations
+  file               File                  @relation(fields: [fileId], references: [id])
+  user               User                  @relation(fields: [userId], references: [id])
+
+  @@unique([fileId, userId])
+  @@index([userId])
+  @@index([fileId])
+}
+
+model FileVersion {
+  id                 Int                   @id @default(autoincrement())
+  fileId             Int
+  content            String
+  versionNumber      Int
+  createdById        Int
+  createdAt          DateTime              @default(now())
+
+  // Relations
+  file               File                  @relation(fields: [fileId], references: [id])
+  createdBy          User                  @relation("FileVersionCreatedBy", fields: [createdById], references: [id])
+
+  @@index([fileId])
+  @@index([createdById])
+}
+
+model AuditLog {
+  id                 Int                   @id @default(autoincrement())
+  userId             Int
+  fileId             Int?
+  projectId          Int?
+  action             AuditAction
+  timestamp          DateTime              @default(now())
+
+  // Relations
+  user               User                  @relation("AuditLogUser", fields: [userId], references: [id])
+  file               File?                 @relation("AuditLogFile", fields: [fileId], references: [id])
+  project            Project?              @relation("AuditLogProject", fields: [projectId], references: [id])
+
+  @@index([userId])
+  @@index([fileId])
+  @@index([projectId])
+}
