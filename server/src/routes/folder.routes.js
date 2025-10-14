@@ -7,5 +7,6 @@ const folderRouter = express.Router();
 
 folderRouter.use(authMiddleware)
 folderRouter.post('/', folderController.createFolder);
+folderRouter.get('/', folderController.list);
 
 export default folderRouter;

@@ -24,3 +24,9 @@ export async function createFolder(userId, projectId, name , parentFolderId=null
 
     return folder;
 }
+
+export async function listFolders(userId , projectId , parentFolderId=null) {
+    await checkMembership(userId , projectId);
+    const folders = await folderRepository.listByProject(projectId , parentFolderId);
+    return folders;
+}

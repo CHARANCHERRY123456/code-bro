@@ -7,9 +7,9 @@ class FolderRepository extends CrudRepository {
     constructor() {
         super(prisma.folder);
     }
-    async listByProject(projectId,parentId=null) {
+    async listByProject(projectId,parentFolderId=null) {
         return await this.model.findMany({
-            where: { projectId, parentId },
+            where: { projectId, parentFolderId },
             orderBy: { name: 'asc' }
         });
     }
