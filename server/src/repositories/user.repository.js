@@ -1,5 +1,5 @@
 import { PrismaClient } from "@prisma/client";
-import CrudRepository from "./crud.repostiory.js";
+import CrudRepository from "./crud.repository.js";
 
 const prisma = new PrismaClient();
 

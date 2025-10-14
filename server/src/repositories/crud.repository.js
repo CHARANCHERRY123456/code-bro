@@ -21,6 +21,12 @@ class CrudRepository {
         });
     }
 
+    async findById(id , include={}) {
+        return await this.model.findUnique({
+            where: { id },
+         });
+    }
+    
     async update(where , data){
         return await this.model.update({
             where , data

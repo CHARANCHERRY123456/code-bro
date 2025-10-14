@@ -1,4 +1,4 @@
-import AUTH_ERROR_CONSTANTS from '../constants/auth.constants.js';
+import {AUTH_ERROR_CONSTANTS} from '../constants/auth.constants.js';
 import { verifyToken } from '../utils/jwt.js';
 
 export default function authMiddleware(req, res, next) {
