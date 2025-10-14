@@ -13,6 +13,10 @@ enum RootRole {
   USER
 }
 
+enum FileType {
+  FILE
+  FOLDER
+}
 enum FileRole {
   EDITOR
   VIEWER
@@ -49,6 +53,7 @@ model User {
   memberships        ProjectMembership[]
   fileAccesses       FileAccess[]
   fileVersions       FileVersion[]         @relation("FileVersionCreatedBy")
+  createdNodes       Node[]
   auditLogs          AuditLog[]            @relation("AuditLogUser")
 }
 
@@ -63,7 +68,7 @@ model Project {
   // Relations
   owner              User                  @relation("ProjectOwner", fields: [ownerId], references: [id])
   memberships        ProjectMembership[]
-  folders            Folder[]
+  nodes              Node[]
   auditLogs          AuditLog[]            @relation("AuditLogProject")
 }
 
@@ -83,87 +88,78 @@ model ProjectMembership {
   @@index([userId])
 }
 
-model Folder {
-  id                 Int                   @id @default(autoincrement())
-  name               String
-  projectId          Int
-  parentFolderId     Int? 
-  createdAt          DateTime              @default(now())
-  updatedAt          DateTime              @updatedAt
+
+model Node {
+  id        Int       @id @default(autoincrement())
+  name      String
+  type      FileType
+  content   String?
+  parentId  Int?
+  projectId Int
+  createdById Int
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 
   // Relations
-  project            Project               @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  parentFolder       Folder?               @relation("FolderHierarchy", fields: [parentFolderId], references: [id], onDelete: Cascade)
-  subFolders         Folder[]              @relation("FolderHierarchy")
-  files              File[]
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  parent    Node?   @relation("NodeChildren", fields: [parentId], references: [id], onDelete: Cascade)
+  children  Node[]  @relation("NodeChildren")
+  createdBy User    @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  accessList FileAccess[]
+  versions  FileVersion[]
+  auditLogs AuditLog[] @relation("AuditLogFile")
 
   @@index([projectId])
-  @@index([parentFolderId])
-}
-
-model File {
-  id                 Int                   @id @default(autoincrement())
-  name               String
-  folderId           Int
-  content            String?
-  createdAt          DateTime              @default(now())
-  updatedAt          DateTime              @updatedAt
-
-  // Relations
-  folder             Folder                @relation(fields: [folderId], references: [id], onDelete: Cascade)
-  access             FileAccess[]
-  versions           FileVersion[]
-  auditLogs          AuditLog[]            @relation("AuditLogFile")
-
-  @@index([folderId])
+  @@index([parentId])
+	@@map("Node")
 }
 
 model FileAccess {
-  id                 Int                   @id @default(autoincrement())
-  fileId             Int
-  userId             Int
-  role               FileRole
-  grantedAt          DateTime              @default(now())
+  id        Int      @id @default(autoincrement())
+  nodeId    Int
+  userId    Int
+  role      FileRole
+  grantedAt DateTime @default(now())
 
   // Relations
-  file               File                  @relation(fields: [fileId], references: [id], onDelete: Cascade)
-  user               User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  node      Node     @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([fileId, userId])
+  @@unique([nodeId, userId])
   @@index([userId])
-  @@index([fileId])
+  @@index([nodeId])
 }
 
 model FileVersion {
-  id                 Int                   @id @default(autoincrement())
-  fileId             Int
-  content            String
-  versionNumber      Int
-  createdById        Int
-  createdAt          DateTime              @default(now())
+  id            Int      @id @default(autoincrement())
+  nodeId        Int
+  content       String
+  versionNumber Int
+  createdById   Int
+  createdAt     DateTime @default(now())
 
   // Relations
-  file               File                  @relation(fields: [fileId], references: [id], onDelete: Cascade)
-  createdBy          User                  @relation("FileVersionCreatedBy", fields: [createdById], references: [id], onDelete: Cascade)
+  node          Node     @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+  createdBy     User     @relation("FileVersionCreatedBy", fields: [createdById], references: [id], onDelete: Cascade)
 
-  @@index([fileId])
+  @@index([nodeId])
   @@index([createdById])
 }
 
 model AuditLog {
   id                 Int                   @id @default(autoincrement())
   userId             Int
-  fileId             Int?
+  nodeId             Int?
   projectId          Int?
   action             AuditAction
   timestamp          DateTime              @default(now())
 
   // Relations
   user               User                  @relation("AuditLogUser", fields: [userId], references: [id], onDelete: Cascade)
-  file               File?                 @relation("AuditLogFile", fields: [fileId], references: [id], onDelete: Cascade)
+  node               Node?                 @relation("AuditLogFile", fields: [nodeId], references: [id], onDelete: Cascade)
   project            Project?              @relation("AuditLogProject", fields: [projectId], references: [id], onDelete: Cascade)
 
   @@index([userId])
-  @@index([fileId])
+  @@index([nodeId])
   @@index([projectId])
 }

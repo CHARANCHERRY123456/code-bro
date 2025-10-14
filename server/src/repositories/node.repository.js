@@ -3,22 +3,22 @@ import CrudRepository from './crud.repository.js';
 
 const prisma = new PrismaClient();
 
-class FolderRepository extends CrudRepository {
+class NodeRepository extends CrudRepository {
     constructor() {
-        super(prisma.folder);
+        super(prisma.node);
     }
-    async listByProject(projectId,parentFolderId=null) {
+    async listByParent(projectId,parentId=null) {
         return await this.model.findMany({
-            where: { projectId, parentFolderId },
+            where: { projectId, parentId },
             orderBy: { name: 'asc' }
         });
     }
 
-    async findById(folderId){
+    async findById(nodeId){
         return await this.model.findUnique({
-            where: { id: folderId }
+            where: { id: nodeId }
         });
     }
 }
 
-export default new FolderRepository();
+export default new NodeRepository();
