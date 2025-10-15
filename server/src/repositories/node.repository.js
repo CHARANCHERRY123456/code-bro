@@ -13,12 +13,6 @@ class NodeRepository extends CrudRepository {
             orderBy: { name: 'asc' }
         });
     }
-
-    async findById(nodeId){
-        return await this.model.findUnique({
-            where: { id: nodeId }
-        });
-    }
 }
 
 export default new NodeRepository();

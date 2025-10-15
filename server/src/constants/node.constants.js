@@ -6,6 +6,7 @@ export const NODE_ERRORS= {
     UNAUTHORIZED: 'Evadra ayya nv mingey ikkada nunchi neek access ledhu ee pani cheseki',
     PROJECT_NAME_REQUIRED : 'aa project name id  cheppandi sir #dj',
     INVALID_NODE_TYPE : 'Node type is invalid',
+    NODE_NAME_ERROR : 'Node name is required and it should be atleast 1 character long',
 }
 
 export const NODE_TYPES = {
