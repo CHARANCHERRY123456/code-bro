@@ -1,20 +1,28 @@
 import * as authService from '../services/auth.service.js';
 
-export async function register(req,res,next) {
+export async function register(req, res, next) {
     try {
         const user = await authService.register(req.body);
-        res.status(201).json({success : true,data : user})
+        res.status(201).json({ success: true, data: user });
     } catch (error) {
         next(error);
     }
 }
 
-export async function login(req,res,next) {
-    try{
+export async function login(req, res, next) {
+    try {
         const result = await authService.login(req.body);
-        res.json({success:true,data:result});
+        res.json({ success: true, data: result });
+    } catch (error) {
+        next(error);
     }
-    catch(error){
+}
+
+export async function google(req, res, next) {
+    try {
+        const result = await authService.google(req.body);
+        res.json({ success: true, data: result });
+    } catch (error) {
         next(error);
     }
 }

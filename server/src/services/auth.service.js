@@ -27,3 +27,18 @@ export async function login({email,password}){
     const token = generateToken(userInfo);
     return {user : userInfo,token}
 }
+
+export async function google({token}){
+    const res = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${token}`);
+    if (!res.ok) throw new Error('Invalid Google token');
+    const {email, name} = await res.json();
+    let user = await UserRepository.findByEmail(email);
+    
+    if (!user) {
+        user = await UserRepository.create({name, email});
+    }
+
+    const userInfo = {id: user.id, name: user.name, email: user.email};
+    const jwt_token = generateToken(userInfo);
+    return {user: userInfo, token : jwt_token}
+}
