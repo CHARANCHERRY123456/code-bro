@@ -1,69 +1,45 @@
 "use client";
-import { useSession, signOut } from "next-auth/react";
-import { useEffect } from "react";
+import ProjectList from "./ProjectList";
+import ProjectForm from "./ProjectForm";
+import { useSession } from "next-auth/react";
+import { useEffect, useState } from "react";
 
 export default function ProjectsPage() {
   const { data: session, status } = useSession();
+  const [projects, setProjects] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  function fetchProjects() {
+    setLoading(true);
+    setError(null);
+    import("@/lib/axios")
+      .then(({ default: api }) => {
+        api
+          .get("/project", {
+            headers: { Authorization: `Bearer ${session?.backendJWT}` },
+          })
+          .then((res) =>
+            setProjects(Array.isArray(res.data.data) ? res.data.data : [])
+          )
+          .catch((err) => setError(err.message || "Failed to fetch projects"))
+          .finally(() => setLoading(false));
+      })
+      .catch((err) => setError(err.message || "Failed to load API"));
+  }
 
   useEffect(() => {
-    console.log("📄 [PROJECTS PAGE] Component mounted");
-    console.log("📄 [PROJECTS PAGE] Session status:", status);
-    console.log("📄 [PROJECTS PAGE] Session data:", session);
-  }, [session, status]);
+    if (session?.backendJWT) fetchProjects();
+  }, [session]);
 
-  const handleLogout = async () => {
-    console.log("🚪 [PROJECTS PAGE] Logout clicked");
-    await signOut({ redirect: false });
-    console.log("✅ [PROJECTS PAGE] Logout successful, redirecting to /login");
-    window.location.href = "/login";
-  };
-
-  if (status === "loading") {
-    console.log("⏳ [PROJECTS PAGE] Loading session...");
-    return <div style={{ padding: "20px" }}>Loading...</div>;
-  }
-
-  if (!session) {
-    console.log("❌ [PROJECTS PAGE] No session found, user not authenticated");
-    return (
-      <div style={{ padding: "20px" }}>
-        <p>Not authenticated. Please <a href="/login">login</a>.</p>
-      </div>
-    );
-  }
-
-  console.log("✅ [PROJECTS PAGE] User authenticated:", session.user);
+  if (loading) return <div className="p-8">Loading projects...</div>;
+  if (error) return <div className="p-8 text-red-600">Error: {error}</div>;
 
   return (
-    <div style={{ padding: "40px", maxWidth: "800px", margin: "0 auto" }}>
-      <h1>Projects Dashboard</h1>
-      
-      <div style={{ 
-        background: "#f5f5f5", 
-        padding: "20px", 
-        borderRadius: "8px", 
-        marginTop: "20px" 
-      }}>
-        <h3>User Info:</h3>
-        <p><strong>ID:</strong> {session.user?.id}</p>
-        <p><strong>Name:</strong> {session.user?.name}</p>
-        <p><strong>Email:</strong> {session.user?.email}</p>
-      </div>
-
-      <button 
-        onClick={handleLogout}
-        style={{ 
-          marginTop: "20px",
-          padding: "10px 20px", 
-          background: "#ff4444", 
-          color: "white", 
-          border: "none", 
-          borderRadius: "4px",
-          cursor: "pointer"
-        }}
-      >
-        Logout
-      </button>
+    <div className="p-8">
+      <h2 className="text-xl font-bold mb-4">Projects List</h2>
+      <ProjectForm backendJWT={session?.backendJWT} onCreated={fetchProjects} />
+      <ProjectList projects={projects} />
     </div>
   );
 }
