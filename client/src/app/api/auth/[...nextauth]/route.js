@@ -9,6 +9,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
     }),
   ],
+  session: {
+    strategy: "jwt",
+  },
+  secret: process.env.NEXTAUTH_SECRET || "my_super_secret_key_123",
   callbacks: {
     async jwt({ token, account }) {
       // Always call backend if Google login just happened
@@ -33,7 +37,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return session;
     },
   },
-  debug: true,
 });
 
 export const { GET, POST } = handlers;
