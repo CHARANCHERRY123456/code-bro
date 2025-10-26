@@ -37,9 +37,18 @@ export default function ProjectsPage() {
 
   return (
     <div className="p-8">
-      <h2 className="text-xl font-bold mb-4">Projects List</h2>
-      <ProjectForm backendJWT={session?.backendJWT} onCreated={fetchProjects} />
-      <ProjectList projects={projects} />
+      <div className="max-w-5xl mx-auto">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-semibold">Projects</h2>
+          <p className="text-sm text-gray-500">Manage your projects and members</p>
+        </div>
+
+        <div className="mb-6">
+          <ProjectForm backendJWT={session?.backendJWT} onCreated={fetchProjects} />
+        </div>
+
+        <ProjectList projects={projects} />
+      </div>
     </div>
   );
 }
