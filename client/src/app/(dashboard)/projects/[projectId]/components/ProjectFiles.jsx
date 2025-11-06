@@ -2,7 +2,6 @@
 import React, { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import api from "@/lib/axios";
-import NewNodeForm from "./NewNodeForm";
 import ProjectSidebar from "./ProjectSidebar";
 
 export default function ProjectFiles({ projectId }) {
@@ -12,6 +11,7 @@ export default function ProjectFiles({ projectId }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [selectedNode, setSelectedNode] = useState(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   async function fetchNodes(parentId = null) {
     if (!backendJWT) return;
@@ -42,12 +42,19 @@ export default function ProjectFiles({ projectId }) {
       </div>
 
       <div className="flex gap-4">
-        <ProjectSidebar projectId={projectId} onSelect={(node) => setSelectedNode(node)} />
+        <ProjectSidebar
+          projectId={projectId}
+          selectedNodeId={selectedNode?.id ?? null}
+          refresh={refreshKey}
+          onSelect={(node) => setSelectedNode(node)}
+          onCreated={() => {
+            fetchNodes(selectedNode ? selectedNode.id : null);
+            setRefreshKey((k) => k + 1);
+          }}
+        />
 
         <main className="flex-1">
-          <div className="mb-4">
-            <NewNodeForm projectId={projectId} backendJWT={backendJWT} parentId={selectedNode?.id} onCreated={() => fetchNodes(selectedNode ? selectedNode.id : null)} />
-          </div>
+          {/* New node creation moved into the sidebar (+ per-folder). */}
 
           {loading && <div>Loading files...</div>}
           {error && <pre className="text-red-600 dark:text-red-400">{JSON.stringify(error, null, 2)}</pre>}
