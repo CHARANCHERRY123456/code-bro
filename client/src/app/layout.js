@@ -12,7 +12,7 @@ export default function RootLayout({ children }) {
           <script src="https://cdn.tailwindcss.com"></script>
         )}
       </head>
-      <body>
+      <body className="bg-white text-gray-900 antialiased dark:bg-slate-900 dark:text-gray-100">
         <ThemeProvider>
           <SessionWrapper>
             <Navbar />
