@@ -1,10 +1,16 @@
 "use client";
+import React, { useEffect, useState } from "react";
 import { useTheme } from "next-themes";
 import { useSession, signIn, signOut } from "next-auth/react";
 
 export default function Navbar() {
   const { theme, setTheme } = useTheme();
   const { data: session, status } = useSession();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   return (
     <nav className="w-full flex items-center justify-between px-6 py-3 bg-gray-100 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800">
@@ -14,7 +20,7 @@ export default function Navbar() {
           className="px-3 py-1 rounded bg-blue-500 text-white hover:bg-blue-600 transition"
           onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
         >
-          {theme === "dark" ? "🌙" : "☀️"}
+          {mounted ? (theme === "dark" ? "🌙" : "☀️") : null}
         </button>
         {status === "loading" ? null : session ? (
           <>
