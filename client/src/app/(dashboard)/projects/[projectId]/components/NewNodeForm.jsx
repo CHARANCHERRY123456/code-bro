@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import api from "@/lib/axios";
 
-export default function NewNodeForm({ projectId, backendJWT, onCreated }) {
+export default function NewNodeForm({ projectId, backendJWT, onCreated, parentId = null }) {
   const [name, setName] = useState("");
   const [type, setType] = useState("FILE");
   const [loading, setLoading] = useState(false);
@@ -16,7 +16,7 @@ export default function NewNodeForm({ projectId, backendJWT, onCreated }) {
     try {
       await api.post(
         "/node",
-        { projectId: parseInt(projectId), name, type },
+        { projectId: parseInt(projectId), name, type, parentId: parentId ? parseInt(parentId) : null },
         { headers: { Authorization: `Bearer ${backendJWT}` } }
       );
       setName("");
