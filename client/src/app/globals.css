@@ -1,18 +1,1 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-/* Global page settings */
-:root {
-	color-scheme: light;
-}
-
-html, body, #__next {
-	height: 100%;
-}
-
-/* NOTE: Avoid using @apply here for bg/text colors because some build setups
-	 may not expose all utilities at the point @apply runs. Instead we add
-	 Tailwind classes directly to the <body> element in `app/layout.js`.
-*/
-
+@import "tailwindcss";

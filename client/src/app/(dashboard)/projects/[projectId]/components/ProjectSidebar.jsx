@@ -18,7 +18,6 @@ export default function ProjectSidebar({ projectId, onSelect, selectedNodeId = n
   const addInputRef = useRef(null);
 
   useEffect(() => {
-    // clear cached children when refresh changes so newly created nodes show up
     setChildrenMap({});
     setExpanded({});
 
