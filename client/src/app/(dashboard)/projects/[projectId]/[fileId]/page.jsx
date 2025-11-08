@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import api from "@/lib/axios";
+import CodeEditor from "./components/CodeEditor";
 
 export default function Editor() {
     const { fileId } = useParams();
@@ -30,9 +31,9 @@ export default function Editor() {
     return (
         <div className="flex flex-col h-full p-4">
             <h2 className="text-lg font-semibold mb-4 dark:text-white">{fileName}</h2>
-            <textarea
+            <CodeEditor
                 value={content}
-                onChange={(e) => setContent(e.target.value)}
+                setValue={setContent}
                 className="flex-1 p-4 bg-white dark:bg-slate-800 dark:text-white border rounded font-mono text-sm resize-none"
                 placeholder="File content..."
             />
