@@ -7,6 +7,7 @@ export default function authMiddleware(req, res, next) {
         return res.status(401).json({ message: AUTH_ERROR_CONSTANTS.MISSING_AUTH_HEADER });
     }
     const token = authHeader.split(' ')[1];
+    
     try {
         const decoded = verifyToken(token);
         req.user = decoded;

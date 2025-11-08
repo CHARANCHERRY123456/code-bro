@@ -19,7 +19,6 @@ export async function createNode(req, res, next) {
 export async function list(req , res , next) {
     try {
         const {projectId , parentId} = req.query;
-        console.log(projectId , parentId , "got int the list");
         
         const userId = req.user.id;
         if(!projectId) return res.status(400).json({message: NODE_ERRORS.PROJECT_NAME_REQUIRED});
@@ -36,6 +35,8 @@ export async function list(req , res , next) {
 export async function fetchNode(req , res , next) {
     try {
         const {nodeId} = req.params;
+        console.log(nodeId , "is trying to fetch");
+        
         const userId = req.user.id;
         if(!nodeId) return res.status(400).json({message: NODE_ERRORS.NODE_ID_REQUIRED});
         const node = await NodeServices.fetchNode(userId , parseInt(nodeId));
