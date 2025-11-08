@@ -60,6 +60,7 @@ async function deleteProject(projectId){
 async function checkIfOwner(userId , projectId) {
     
     const project = await projectRepository.findById(projectId);
+    console.log(userId , projectId , "got int he check if owner service function");
     if(!project) throw new Error(PROJECT_ERROR.NOT_FOUND);
     if(project.ownerId !== userId)
         throw new Error(PROJECT_ERROR.AUTH_ERROR)
