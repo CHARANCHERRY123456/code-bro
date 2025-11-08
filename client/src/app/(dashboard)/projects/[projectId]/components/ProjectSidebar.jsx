@@ -17,6 +17,7 @@ export default function ProjectSidebar({ projectId, onSelect, selectedNodeId = n
   const [addError, setAddError] = useState(null);
   const addInputRef = useRef(null);
 
+  // load initital root nodes
   useEffect(() => {
     setChildrenMap({});
     setExpanded({});
@@ -51,7 +52,6 @@ export default function ProjectSidebar({ projectId, onSelect, selectedNodeId = n
       setExpanded((s) => ({ ...s, [id]: false }));
       return;
     }
-    // expand: fetch children if not present
     if (childrenMap[id]) {
       setExpanded((s) => ({ ...s, [id]: true }));
       return;

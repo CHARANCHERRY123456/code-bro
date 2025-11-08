@@ -9,7 +9,10 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@codemirror/lang-javascript": "^6.2.4",
+    "@uiw/react-codemirror": "^4.25.3",
     "axios": "^1.12.2",
+    "lodash.debounce": "^4.0.8",
     "lucide-react": "^0.552.0",
     "next": "15.5.4",
     "next-auth": "^5.0.0-beta.29",
@@ -17,6 +20,7 @@
     "postcss": "^8.5.6",
     "react": "19.1.0",
     "react-dom": "19.1.0",
+    "react-yjs": "^2.0.1",
     "tailwindcss": "^4.1.17"
   },
   "devDependencies": {
