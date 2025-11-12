@@ -11,3 +11,14 @@ export async function createInvite(req , res , next) {
         next(error);
     }
 }
+
+export async function getInviteInfo(req , res , next) {
+    try {
+        const token = req.params.token;
+        const userId = req.user?.id;
+        const info = await inviteService.getInviteInfo(token , userId);
+        return res.json({success : true , data : info});
+    } catch (err) {
+        next(err)
+    }
+}

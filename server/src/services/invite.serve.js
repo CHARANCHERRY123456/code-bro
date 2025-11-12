@@ -6,6 +6,7 @@ import ProjectJoinRequestRepository from "../repositories/project.invite.reposit
 import userRepository from "../repositories/user.repository.js";
 import sendMail from "../utils/mailer.js";
 import projectInviteRepository from "../repositories/projectinvite.repository.js";
+import projectMemberRepository from "../repositories/project.member.repository.js";
 
 export async function createInvite(ownerId, projectId, expiresInDays=7) {
     const project = await projectRepository.findById(projectId);
@@ -24,4 +25,33 @@ export async function createInvite(ownerId, projectId, expiresInDays=7) {
     })
 
     return invite;
+}
+
+// gives all the details about infor like which project,user,owner
+export async function getInviteInfo(token , userId=null) {
+    const invite = await projectInviteRepository.findByToken(token);
+    if (!invite || !invite.isActive) {
+        throw new Error("Invalid or inactive invite token");
+    }
+    if (invite.expiresAt && invite.expiresAt < new Date()) {
+        throw new Error("Invite token has expired");
+    }
+    console.log(invite);
+    
+    const project = await projectRepository.findById(invite.projectId);
+    if(!project) throw new Error("Project Not Found");
+    let isMemeber = false;
+    if(userId){
+        const membership = await projectMemberRepository.findMember(userId , project.id);
+        if(!project) throw new Error("Project Not Found");
+        isMemeber = !!membership;
+    }
+
+    return {
+        inviteId : invite.id,
+        token : invite.token ,
+        project : project,
+        isMemeber,
+        expiresAt : invite.expiresAt
+    };
 }

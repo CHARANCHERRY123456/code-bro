@@ -6,5 +6,6 @@ const InviteRouter = express.Router();
 
 // have a prefix of /invite
 InviteRouter.post("/:projectId/" , authMiddleware , inviteController.createInvite);
+InviteRouter.get("/:token" , authMiddleware , inviteController.getInviteInfo);
 
 export default InviteRouter;
