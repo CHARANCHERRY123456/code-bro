@@ -9,7 +9,7 @@ class NodeRepository extends CrudRepository {
     }
     async listByParent(projectId,parentId=null) {
         return await this.model.findMany({
-            where: { projectId, parentId },
+            where: { projectId },
             orderBy: { name: 'asc' }
         });
     }
