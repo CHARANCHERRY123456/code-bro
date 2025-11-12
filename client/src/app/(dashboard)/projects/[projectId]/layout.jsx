@@ -1,8 +1,9 @@
 "use client";
+
 import React, { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import api from "@/lib/axios";
-import ProjectSidebar from "./components/sidebar/ProjectSidebar";
+import ProjectSidebar from "./components/ProjectSidebar";
 
 export default function ProjectLayout({ children, params }) {
   const resolvedParams = React.use(params);
@@ -29,9 +30,8 @@ export default function ProjectLayout({ children, params }) {
 
   const handleCreateNode = async ({ name, type, parentId }) => {
     if (!session?.backendJWT || !projectId) return;
-    
     try {
-      await api.post("/node", {
+      const res = await api.post("/node", {
         name,
         type,
         parentId,
@@ -39,14 +39,14 @@ export default function ProjectLayout({ children, params }) {
       }, {
         headers: { Authorization: `Bearer ${session.backendJWT}` },
       });
-      
-      await fetchNodes();
+      // Use the backend's returned node directly
+      const realNode = res.data?.data;
+      setNodes(prev => [...prev, realNode]);
     } catch (error) {
       console.error("Failed to create node:", error);
       alert("Failed to create " + type.toLowerCase());
     }
   };
-  console.log(nodes);
   
   return (
     <div className="flex h-screen w-full">
