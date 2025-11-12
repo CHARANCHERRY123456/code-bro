@@ -55,6 +55,8 @@ model User {
   fileVersions       FileVersion[]         @relation("FileVersionCreatedBy")
   createdNodes       Node[]
   auditLogs          AuditLog[]            @relation("AuditLogUser")
+  invites      ProjectInvite[]
+  joinRequests ProjectJoinRequest[]
 }
 
 model Project {
@@ -70,6 +72,9 @@ model Project {
   memberships        ProjectMembership[]
   nodes              Node[]
   auditLogs          AuditLog[]            @relation("AuditLogProject")
+  invites  ProjectInvite[]
+  joinRequests ProjectJoinRequest[]
+
 }
 
 model ProjectMembership {
@@ -88,6 +93,36 @@ model ProjectMembership {
   @@index([userId])
 }
 
+model ProjectInvite{
+  id Int @id @default(autoincrement())
+  projectId Int
+  token String @unique
+  createdBy Int
+  expiresAt DateTime?
+  isActive Boolean @default(true)
+  createdAt DateTime @default(now())
+
+  // Relations
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  creator User @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+}
+
+model ProjectJoinRequest {
+  id Int @id @default(autoincrement())
+  projectId Int
+  userId Int
+  message String?
+  status String @default("PENDING") // PENDING, APPROVED, REJECTED
+  createdAt DateTime @default(now())
+
+  // Relations
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, userId])
+  @@index([projectId])
+  @@index([userId])
+}
 
 model Node {
   id        Int       @id @default(autoincrement())
