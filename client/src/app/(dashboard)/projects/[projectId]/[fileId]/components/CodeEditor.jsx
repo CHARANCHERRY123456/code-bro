@@ -224,11 +224,103 @@ export default function RealTimeEditor({ fileId = "1", fileName = "untitled.js",
           </div>
         </div>
 
-        <div className="flex-1 overflow-hidden bg-[#1e1e1e] [&_.cm-editor]:bg-[#1e1e1e]! [&_.cm-editor]:text-[#d4d4d4] [&_.cm-editor]:font-mono [&_.cm-scroller]:bg-[#1e1e1e]! [&_.cm-content]:bg-[#1e1e1e]! [&_.cm-content]:py-2 [&_.cm-line]:bg-transparent! [&_.cm-line]:px-4 [&_.cm-line]:leading-6 [&_.cm-line]:text-[#d4d4d4] [&_.cm-gutters]:bg-[#1e1e1e]! [&_.cm-gutters]:text-[#858585] [&_.cm-gutters]:border-r [&_.cm-gutters]:border-[#3e3e42] [&_.cm-gutters]:pr-2 [&_.cm-activeLineGutter]:bg-[#282828]! [&_.cm-activeLine]:bg-[#282828]! [&_.cm-selectionBackground]:bg-blue-500/30! [&_.cm-cursor]:border-l-2! [&_.cm-cursor]:border-white! [&_.cm-placeholder]:text-[#6b7280] [&_.cm-placeholder]:italic [&_.cm-matchingBracket]:bg-white/10 [&_.cm-matchingBracket]:border [&_.cm-matchingBracket]:border-[#3e3e42] [&_.cm-searchMatch]:bg-yellow-400/30 [&_.cm-searchMatch]:border [&_.cm-searchMatch]:border-yellow-400/50 [&_.cm-searchMatch-selected]:bg-yellow-400/50 [&_.cm-focused]:outline-none [&_.y-cursor]:relative [&_.y-cursor]:border-l-2 [&_.y-cursor]:border-blue-500 [&_.y-cursor]:-ml-px [&_.yjs-cursor]:relative [&_.yjs-cursor]:border-l-2 [&_.yjs-cursor]:border-blue-500 [&_.yjs-cursor]:-ml-px [&_.y-selection]:bg-blue-500/20 [&_.y-selection]:border-l-2 [&_.y-selection]:border-blue-500 [&_.yjs-selection]:bg-blue-500/20 [&_.yjs-selection]:border-l-2 [&_.yjs-selection]:border-blue-500 [&_.cm-scroller::-webkit-scrollbar]:w-3 [&_.cm-scroller::-webkit-scrollbar]:h-3 [&_.cm-scroller::-webkit-scrollbar-track]:bg-[#1e1e1e] [&_.cm-scroller::-webkit-scrollbar-thumb]:bg-[#424242] [&_.cm-scroller::-webkit-scrollbar-thumb]:rounded [&_.cm-scroller::-webkit-scrollbar-thumb]:border-2 [&_.cm-scroller::-webkit-scrollbar-thumb]:border-[#1e1e1e] [&_.cm-scroller::-webkit-scrollbar-thumb:hover]:bg-[#4e4e4e]">
+        <div className="flex-1 overflow-hidden bg-[#1e1e1e]">
+          <style jsx global>{`
+            .cm-editor {
+              background: #1e1e1e !important;
+              color: #d4d4d4 !important;
+              font-family: 'Menlo', 'Monaco', 'Courier New', monospace !important;
+              height: 100%;
+            }
+            .cm-scroller {
+              background: #1e1e1e !important;
+            }
+            .cm-content {
+              background: #1e1e1e !important;
+              padding: 0.5rem 0;
+            }
+            .cm-line {
+              background: transparent !important;
+              padding: 0 1rem;
+              line-height: 1.5rem;
+              color: #d4d4d4;
+            }
+            .cm-gutters {
+              background: #1e1e1e !important;
+              color: #858585;
+              border-right: 1px solid #3e3e42;
+              padding-right: 0.5rem;
+            }
+            .cm-activeLineGutter {
+              background: #282828 !important;
+            }
+            .cm-activeLine {
+              background: #282828 !important;
+            }
+            /* Selection styles - VS Code like */
+            .cm-selectionBackground,
+            .cm-content ::selection {
+              background: #264f78 !important;
+            }
+            .cm-focused .cm-selectionBackground,
+            .cm-focused .cm-content ::selection {
+              background: #264f78 !important;
+            }
+            .cm-selectionMatch {
+              background: #3a3d41 !important;
+            }
+            .cm-cursor {
+              border-left: 2px solid white !important;
+            }
+            .cm-placeholder {
+              color: #6b7280;
+              font-style: italic;
+            }
+            .cm-matchingBracket {
+              background: rgba(255, 255, 255, 0.1);
+              border: 1px solid #3e3e42;
+            }
+            .cm-searchMatch {
+              background: rgba(250, 204, 21, 0.3);
+              border: 1px solid rgba(250, 204, 21, 0.5);
+            }
+            .cm-searchMatch-selected {
+              background: rgba(250, 204, 21, 0.5);
+            }
+            .cm-focused {
+              outline: none !important;
+            }
+            /* Yjs collaboration cursors */
+            .y-cursor, .yjs-cursor {
+              position: relative;
+              border-left: 2px solid #3b8eea;
+              margin-left: -1px;
+            }
+            .y-selection, .yjs-selection {
+              background: rgba(59, 142, 234, 0.2);
+              border-left: 2px solid #3b8eea;
+            }
+            /* Scrollbar */
+            .cm-scroller::-webkit-scrollbar {
+              width: 12px;
+              height: 12px;
+            }
+            .cm-scroller::-webkit-scrollbar-track {
+              background: #1e1e1e;
+            }
+            .cm-scroller::-webkit-scrollbar-thumb {
+              background: #424242;
+              border-radius: 4px;
+              border: 2px solid #1e1e1e;
+            }
+            .cm-scroller::-webkit-scrollbar-thumb:hover {
+              background: #4e4e4e;
+            }
+          `}</style>
           <CodeMirror
             ref={editorRef}
             height="100%"
-            className="h-full bg-[#1e1e1e]!"
+            className="h-full"
             extensions={[languageExtension, vscodeDark, ...collabExtension]}
             placeholder="// start typing the code here"
             basicSetup={{
