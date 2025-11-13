@@ -5,42 +5,73 @@ import { vscodeDark } from "@uiw/codemirror-theme-vscode";
 import * as Y from 'yjs';
 import { WebsocketProvider } from 'y-websocket';
 import { yCollab } from 'y-codemirror.next';
-import { useEffect, useRef } from "react";
-import { Compartment } from "@codemirror/state";
+import { useEffect, useRef, useState } from "react";
 
 export default function RealTimeEditor({fileId = "1"}){
   const editorRef = useRef(null);
-  const collabCompartment = useRef(new Compartment());
+  const ydocRef = useRef(null);
+  const providerRef = useRef(null);
+  const [collabExtension, setCollabExtension] = useState([]);
+  const [isReady, setIsReady] = useState(false);
 
   useEffect(()=>{
+    setIsReady(false);
+    
+    // Initialize Yjs document
     const ydoc = new Y.Doc();
+    ydocRef.current = ydoc;
 
-    const provider=new WebsocketProvider(
-      process.env.NEXT_PUBLIC_WS_URL,
+    // Get the shared text type
+    const ytext = ydoc.getText("codemirror");
+
+    // Initialize WebSocket provider with proper URL
+    const wsUrl = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:5000';
+    console.log('Connecting to WebSocket:', wsUrl, 'Document:', fileId);
+    
+    const provider = new WebsocketProvider(
+      wsUrl,
       fileId,
       ydoc
     );
+    providerRef.current = provider;
 
-    const ytext = ydoc.getText("codemirror");
+    // Set user info in awareness
+    provider.awareness.setLocalStateField('user', {
+      name: 'User ' + Math.floor(Math.random() * 100),
+      color: '#' + Math.floor(Math.random()*16777215).toString(16)
+    });
 
-    const interval = setInterval(()=>{
-      const view = editorRef.current?.view;
-      if(view){
-        clearInterval(interval);
-        // Reconfigure the compartment with the collaborative extension
-        view.dispatch({
-          effects: collabCompartment.current.reconfigure(yCollab(ytext, provider.awareness)),
-        });
+    // Set up collaboration extension immediately
+    setCollabExtension([yCollab(ytext, provider.awareness)]);
+
+    // Listen to provider status
+    provider.on('status', event => {
+      console.log('WebSocket status:', event.status);
+      if (event.status === 'connected') {
+        setIsReady(true);
       }
-    },200);
+    });
 
+    // Listen for sync events
+    provider.on('sync', isSynced => {
+      console.log('Document synced:', isSynced);
+      if (isSynced) {
+        setIsReady(true);
+      }
+    });
 
-    return ()=>{
-      provider.destroy();
-      ydoc.destroy();
-    }
-
-  },[fileId]);
+    return () => {
+      console.log('Cleaning up Yjs connection for document:', fileId);
+      setIsReady(false);
+      setCollabExtension([]);
+      if (providerRef.current) {
+        providerRef.current.destroy();
+      }
+      if (ydocRef.current) {
+        ydocRef.current.destroy();
+      }
+    };
+  }, [fileId]);
 
   return (
     <div className="flex flex-col h-full p-4 overflow-hidden">
@@ -57,7 +88,7 @@ export default function RealTimeEditor({fileId = "1"}){
 
       {/* Editor card - purely Tailwind, dark theme applied to CodeMirror internals via arbitrary selectors */}
       <div className="flex-1 flex flex-col rounded-md overflow-hidden border border-[#2f3438] shadow-sm bg-[#161719] min-h-0">
-        <div className="px-3 py-2 bg-[#1f2426] border-b border-[#2f3438] flex items-center justify-between flex-shrink-0">
+        <div className="px-3 py-2 bg-[#1f2426] border-b border-[#2f3438] flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2">
             <span className="w-3 h-3 rounded-full bg-[#ff5f56]"></span>
             <span className="w-3 h-3 rounded-full bg-[#ffbd2e]"></span>
@@ -72,7 +103,7 @@ export default function RealTimeEditor({fileId = "1"}){
             ref={editorRef}
             height="100%"
             className="h-full bg-[#1e1e1e]!"
-            extensions={[javascript(), vscodeDark, collabCompartment.current.of([])]}
+            extensions={[javascript(), vscodeDark, ...collabExtension]}
             placeholder="// start typing the code here"
             basicSetup={{
               lineNumbers: true,
