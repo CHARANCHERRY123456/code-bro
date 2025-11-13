@@ -3,7 +3,9 @@
 import React, { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import api from "@/lib/axios";
+
 import ProjectSidebar from "./components/ProjectSidebar";
+import InviteLink from "./components/InviteLink";
 
 export default function ProjectLayout({ children, params }) {
   const resolvedParams = React.use(params);
@@ -51,6 +53,7 @@ export default function ProjectLayout({ children, params }) {
   return (
     <div className="flex h-screen w-full">
       <div className="w-64 border-r bg-white dark:bg-slate-800 overflow-hidden">
+        <InviteLink projectId={projectId} />
         <ProjectSidebar nodes={nodes} onCreateNode={handleCreateNode} />
       </div>
       <div className="flex-1 overflow-auto bg-slate-50 dark:bg-slate-900">

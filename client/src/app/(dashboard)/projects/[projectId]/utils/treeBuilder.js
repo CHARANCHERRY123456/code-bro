@@ -46,6 +46,3 @@ export function insertNode(treeArray, parentId, newNode) {
   return false;
 }
 
-export function generateId() {
-  return Date.now() + Math.floor(Math.random() * 1000);
-}

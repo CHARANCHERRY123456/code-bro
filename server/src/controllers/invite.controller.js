@@ -27,10 +27,10 @@ export async function reqToJoin(req , res , next) {
     try {
         
         const token = req.params.token;
-        console.log(token , "is the token");
         const userId = req.user.id;
         const {message} = req.body || {}
-
+        
+        console.log(token , "is the token");
         const joinReq = await inviteService.reqToJoin(token , userId , message);
         res.status(201).json({success : true , data : joinReq});
     } catch (err) {

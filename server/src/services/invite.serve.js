@@ -65,6 +65,7 @@ export async function reqToJoin(token , userId , message=null) {
     const existingMembership = await projectMemberRepository.findMember(userId , invite.projectId);
     if(existingMembership) throw new Error("Already a member");
     
+    
     // directly add memeber without approval temporaryly
     const newMemeber = await projectMemberRepository.create({
         projectId : invite.projectId,
