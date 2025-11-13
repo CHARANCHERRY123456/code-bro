@@ -22,3 +22,18 @@ export async function getInviteInfo(req , res , next) {
         next(err)
     }
 }
+
+export async function reqToJoin(req , res , next) {
+    try {
+        
+        const token = req.params.token;
+        console.log(token , "is the token");
+        const userId = req.user.id;
+        const {message} = req.body || {}
+
+        const joinReq = await inviteService.reqToJoin(token , userId , message);
+        res.status(201).json({success : true , data : joinReq});
+    } catch (err) {
+        // next(err)
+    }
+}

@@ -55,3 +55,22 @@ export async function getInviteInfo(token , userId=null) {
         expiresAt : invite.expiresAt
     };
 }
+
+export async function reqToJoin(token , userId , message=null) {
+    
+    const invite = await projectInviteRepository.findByToken(token);
+    if (!invite || !invite.isActive) throw new Error('Invalid invite');
+    if (invite.expiresAt && invite.expiresAt < new Date()) throw new Error('Invite expired');
+    
+    const existingMembership = await projectMemberRepository.findMember(userId , invite.projectId);
+    if(existingMembership) throw new Error("Already a member");
+    
+    // directly add memeber without approval temporaryly
+    const newMemeber = await projectMemberRepository.create({
+        projectId : invite.projectId,
+        userId : userId,
+        joinedAt : new Date(),
+    })
+
+    return newMemeber;
+}
