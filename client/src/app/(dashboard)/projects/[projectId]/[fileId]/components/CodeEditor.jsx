@@ -133,7 +133,7 @@ export default function RealTimeEditor({ fileId = "1", fileName = "untitled.js",
     // Initialize WebSocket provider with proper URL
     const wsUrl = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:5000';
     console.log('Connecting to WebSocket:', wsUrl, 'Document:', fileId);
-    
+    console.log('Yjs Documenttext :', ytext);
     const provider = new WebsocketProvider(
       wsUrl,
       fileId,
