@@ -2,9 +2,10 @@
 import { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import RealTimeEditor from "./components/CodeEditor";
-// import Terminal from "./components/Terminal";
+import Terminal from "./components/Terminal";
 import { useParams } from "next/navigation";
 import api from "@/lib/axios";
+import { preloadPyodide } from '@/lib/runRuntimes';
 
 export default function Page() {
   const { fileId, projectId } = useParams();
@@ -14,6 +15,10 @@ export default function Page() {
   const [terminalHeight, setTerminalHeight] = useState(300); // Default terminal height
   const [isResizing, setIsResizing] = useState(false);
   const containerRef = useRef(null);
+  const editorRef = useRef(null);
+  const terminalRef = useRef(null);
+  const [currentCode, setCurrentCode] = useState('');
+  const [currentLanguage, setCurrentLanguage] = useState('javascript');
 
   useEffect(() => {
     if (!session?.backendJWT || !fileId) return;
@@ -33,6 +38,12 @@ export default function Page() {
 
     fetchFileData();
   }, [fileId, session?.backendJWT]);
+
+  // Preload Pyodide in background to reduce Python first-run latency
+  useEffect(() => {
+    // fire-and-forget
+    preloadPyodide().catch(() => {});
+  }, []);
 
   // Handle terminal resize
   const handleMouseDown = () => {
@@ -90,9 +101,12 @@ export default function Page() {
         style={{ height: `calc(100% - ${terminalHeight}px)` }}
       >
         <RealTimeEditor 
+          ref={editorRef}
           fileId={fileId} 
           fileName={fileData?.name || 'untitled.js'}
           projectId={projectId}
+          onCodeChange={setCurrentCode}
+          onLanguageChange={setCurrentLanguage}
         />
       </div>
 
@@ -107,12 +121,17 @@ export default function Page() {
       </div>
 
       {/* Terminal Section */}
-      {/* <div 
+      <div 
         className="overflow-hidden bg-[#1e1e1e]"
         style={{ height: `${terminalHeight}px` }}
       >
-        <Terminal projectId={projectId} fileId={fileId} />
-      </div> */}
+        <Terminal 
+          ref={terminalRef}
+          code={currentCode}
+          language={currentLanguage}
+          fileName={fileData?.name || 'untitled.js'}
+        />
+      </div>
     </main>
   );
 }

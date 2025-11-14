@@ -13,7 +13,7 @@ import { vscodeDark } from "@uiw/codemirror-theme-vscode";
 import * as Y from 'yjs';
 import { WebsocketProvider } from 'y-websocket';
 import { yCollab } from 'y-codemirror.next';
-import { useEffect, useRef, useState, useMemo } from "react";
+import { useEffect, useRef, useState, useMemo, forwardRef, useImperativeHandle } from "react";
 
 // Language detection based on file extension
 const getLanguageExtension = (fileName) => {
@@ -73,10 +73,11 @@ const languages = [
   { id: 'xml', name: 'XML', extension: '.xml' },
 ];
 
-export default function RealTimeEditor({ fileId = "1", fileName = "untitled.js", projectId }){
+const RealTimeEditor = forwardRef(({ fileId = "1", fileName = "untitled.js", projectId, onCodeChange, onLanguageChange }, ref) => {
   const editorRef = useRef(null);
   const ydocRef = useRef(null);
   const providerRef = useRef(null);
+  const viewRef = useRef(null);
   const [collabExtension, setCollabExtension] = useState([]);
   const [isReady, setIsReady] = useState(false);
   const [selectedLanguage, setSelectedLanguage] = useState('javascript');
@@ -119,6 +120,24 @@ export default function RealTimeEditor({ fileId = "1", fileName = "untitled.js",
       setSelectedLanguage(langMap[ext]);
     }
   }, [fileName]);
+
+  // Notify parent when language changes
+  useEffect(() => {
+    if (onLanguageChange) {
+      onLanguageChange(selectedLanguage);
+    }
+  }, [selectedLanguage, onLanguageChange]);
+
+  // Expose getValue method via ref
+  useImperativeHandle(ref, () => ({
+    getValue: () => {
+      if (ydocRef.current) {
+        const ytext = ydocRef.current.getText('codemirror');
+        return ytext.toString();
+      }
+      return '';
+    }
+  }));
 
   useEffect(()=>{
     setIsReady(false);
@@ -323,6 +342,11 @@ export default function RealTimeEditor({ fileId = "1", fileName = "untitled.js",
             className="h-full"
             extensions={[languageExtension, vscodeDark, ...collabExtension]}
             placeholder="// start typing the code here"
+            onChange={(value) => {
+              if (onCodeChange) {
+                onCodeChange(value);
+              }
+            }}
             basicSetup={{
               lineNumbers: true,
               highlightActiveLineGutter: true,
@@ -340,4 +364,8 @@ export default function RealTimeEditor({ fileId = "1", fileName = "untitled.js",
       </div>
     </div>
   )
-}
+});
+
+RealTimeEditor.displayName = 'RealTimeEditor';
+
+export default RealTimeEditor;
