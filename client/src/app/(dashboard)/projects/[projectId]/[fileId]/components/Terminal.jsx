@@ -1,12 +1,13 @@
 'use client';
 import { useEffect, useRef, useState, forwardRef, useImperativeHandle } from 'react';
-import { runCode } from '@/lib/runRuntimes';
 
 const Terminal = forwardRef(({ code, language, fileName }, ref) => {
   const containerRef = useRef(null);
   const termRef = useRef(null);
   const [ready, setReady] = useState(false);
   const [running, setRunning] = useState(false);
+  const currentWorkerRef = useRef(null);
+  const pyWorkerRef = useRef(null);
 
   useEffect(() => {
     let mounted = true;
@@ -36,6 +37,14 @@ const Terminal = forwardRef(({ code, language, fileName }, ref) => {
 
         term.writeln('\x1b[1;32mCodeBro Terminal\x1b[0m');
         term.writeln('Click "Run Code" to execute the current file.\r\n');
+        term.writeln('\x1b[90mPress Ctrl+C to stop execution\x1b[0m\r\n');
+
+        // Handle Ctrl+C to abort execution
+        term.onKey(({ key, domEvent }) => {
+          if (domEvent.ctrlKey && domEvent.key === 'c' && currentWorkerRef.current) {
+            abortExecution();
+          }
+        });
 
         const onResize = () => fit && fit.fit();
         window.addEventListener('resize', onResize);
@@ -60,6 +69,17 @@ const Terminal = forwardRef(({ code, language, fileName }, ref) => {
     };
   }, []);
 
+  const abortExecution = () => {
+    const term = termRef.current?.term;
+    if (currentWorkerRef.current) {
+      term?.write('\r\n\x1b[1;33m^C\x1b[0m\r\n');
+      term?.writeln('\x1b[1;31m✗ Execution aborted\x1b[0m\r\n');
+      currentWorkerRef.current.terminate();
+      currentWorkerRef.current = null;
+      setRunning(false);
+    }
+  };
+
   const runCurrentCode = async () => {
     const term = termRef.current?.term;
     if (!term || !code) {
@@ -71,18 +91,118 @@ const Terminal = forwardRef(({ code, language, fileName }, ref) => {
     term.clear();
     term.writeln(`\x1b[1;36m=== Running: ${fileName || 'untitled'} ===\x1b[0m\r\n`);
 
-    const onOutput = (text) => {
-      term.write(text);
-    };
+    const lang = language.toLowerCase();
 
-    await runCode({ language, code, onOutput });
-    setRunning(false);
+    if (lang === 'javascript' || lang === 'js') {
+      // Run JavaScript in worker
+      const worker = new Worker('/js-worker.js');
+      currentWorkerRef.current = worker;
+
+      worker.onmessage = (e) => {
+        const { type, data, message, stack, exitCode } = e.data;
+        
+        if (type === 'output') {
+          if (data.type === 'error') {
+            term.write('\x1b[1;31mERROR: \x1b[0m' + data.message + '\r\n');
+          } else if (data.type === 'warn') {
+            term.write('\x1b[1;33mWARN: \x1b[0m' + data.message + '\r\n');
+          } else {
+            term.write(data.message + '\r\n');
+          }
+        } else if (type === 'result') {
+          term.write('\x1b[1;32mReturn value: \x1b[0m' + data + '\r\n');
+        } else if (type === 'error') {
+          term.write('\x1b[1;31m✗ Error: \x1b[0m' + message + '\r\n');
+          if (stack) term.write('\x1b[90m' + stack + '\x1b[0m\r\n');
+        } else if (type === 'done') {
+          if (exitCode === 0) {
+            term.write('\x1b[1;32m✓ Execution completed\x1b[0m\r\n');
+          } else {
+            term.write('\x1b[1;31m✗ Execution failed\x1b[0m\r\n');
+          }
+          currentWorkerRef.current = null;
+          setRunning(false);
+        }
+      };
+
+      worker.onerror = (err) => {
+        term.write('\x1b[1;31m✗ Worker error: \x1b[0m' + err.message + '\r\n');
+        currentWorkerRef.current = null;
+        setRunning(false);
+      };
+
+      worker.postMessage({ code });
+    } else if (lang === 'python' || lang === 'py') {
+      // Run Python in Pyodide worker
+      if (!pyWorkerRef.current) {
+        // Initialize Python worker once
+        const worker = new Worker('/py-worker.js');
+        pyWorkerRef.current = worker;
+
+        worker.onmessage = (e) => {
+          const { type, message, data, exitCode } = e.data;
+          
+          if (type === 'status') {
+            term.write('\x1b[90m' + message + '\x1b[0m\r\n');
+          } else if (type === 'ready') {
+            term.write('\x1b[90mPyodide ready\x1b[0m\r\n');
+            // Now run the code
+            currentWorkerRef.current = worker;
+            worker.postMessage({ type: 'run', code });
+          } else if (type === 'stdout') {
+            term.write(data + '\r\n');
+          } else if (type === 'stderr') {
+            term.write('\x1b[1;31mStderr:\x1b[0m\r\n' + data + '\r\n');
+          } else if (type === 'error') {
+            term.write('\x1b[1;31m✗ Error: \x1b[0m' + message + '\r\n');
+          } else if (type === 'done') {
+            if (exitCode === 0) {
+              term.write('\x1b[1;32m✓ Execution completed\x1b[0m\r\n');
+            } else {
+              term.write('\x1b[1;31m✗ Execution failed\x1b[0m\r\n');
+            }
+            currentWorkerRef.current = null;
+            setRunning(false);
+          }
+        };
+
+        worker.onerror = (err) => {
+          term.write('\x1b[1;31m✗ Worker error: \x1b[0m' + err.message + '\r\n');
+          currentWorkerRef.current = null;
+          setRunning(false);
+        };
+
+        // Init Pyodide
+        worker.postMessage({ type: 'init' });
+      } else {
+        // Reuse existing Pyodide worker
+        currentWorkerRef.current = pyWorkerRef.current;
+        pyWorkerRef.current.postMessage({ type: 'run', code });
+      }
+    } else {
+      term.write('\x1b[1;31m✗ Language not supported for frontend execution: \x1b[0m' + language + '\r\n');
+      term.write('\x1b[90mOnly JavaScript and Python are supported\x1b[0m\r\n');
+      setRunning(false);
+    }
   };
 
   useImperativeHandle(ref, () => ({
     run: runCurrentCode,
+    abort: abortExecution,
     clear: () => termRef.current?.term?.clear()
   }));
+
+  // Cleanup workers on unmount
+  useEffect(() => {
+    return () => {
+      if (currentWorkerRef.current) {
+        currentWorkerRef.current.terminate();
+      }
+      if (pyWorkerRef.current) {
+        pyWorkerRef.current.terminate();
+      }
+    };
+  }, []);
 
   return (
     <div className="flex flex-col h-full bg-[#1e1e1e] border-t border-[#2f3438]">
@@ -115,6 +235,16 @@ const Terminal = forwardRef(({ code, language, fileName }, ref) => {
                 Run Code
               </>
             )}
+          </button>
+          <button
+            onClick={abortExecution}
+            disabled={!ready || !running}
+            className="px-3 py-1 text-xs font-medium rounded bg-red-600 hover:bg-red-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white transition-colors flex items-center gap-1.5"
+          >
+            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 00-1 1v4a1 1 0 001 1h4a1 1 0 001-1V8a1 1 0 00-1-1H8z" clipRule="evenodd" />
+            </svg>
+            Stop
           </button>
           <button
             onClick={() => termRef.current?.term?.clear()}
