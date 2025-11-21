@@ -9,7 +9,7 @@ import cors from 'cors'
 const app = express();
 
 app.use(cors({
-  origin: '*',
+  origin: process.env.FRONTED_URL,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS']
 }));
