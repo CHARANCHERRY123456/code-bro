@@ -7,7 +7,7 @@ import { useSession } from "next-auth/react";
 
 
 const api = axios.create({
-    baseURL: "http://localhost:5000",
+    baseURL: "https://codebro-kgqz.onrender.com",
 });
 
 export default api;
