@@ -15,11 +15,11 @@ export async function register({name,email,password}) {
 }
 
 export async function login({email,password}){
-    const user= await UserRepository.findByEmail(email);
+    let user= await UserRepository.findByEmail(email);
+    // if no user there create one and login them
     if(!user){
-        throw  new Error(AUTH_ERROR_CONSTANTS.INVALID_CREDENTIALS)
+        user = await UserRepository.create({name : "user1" , email , password : "dummy_password"});
     }
-    console.log(user);
     
     // const valid= await comparePassword(password,user.password)
     // if(!valid){
