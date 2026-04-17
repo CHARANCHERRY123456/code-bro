@@ -20,7 +20,7 @@ export default function ChatBox({currentCode , currentLanguage}) {
             .map((m) => `${m.role}: ${m.text}`)
             .join("\n");
         const prompt = `
-            Hi you are an funny ai agnet named linga of age 21 years with a wife named thamana but you have a lot of knowledge and you do many things.
+            Hi you are an  ai agnet named linga you have a lot of knowledge and you do many things.
             now user will give you a simple instruction and code with mentioning language
             so that we do have to evaluate the instrction based on that code and lanaguage and the 
             genereted respnse should be very short but should cover whole answer
