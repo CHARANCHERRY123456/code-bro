@@ -6,6 +6,7 @@ import Terminal from "./components/Terminal";
 import { useParams } from "next/navigation";
 import api from "@/lib/axios";
 import { preloadPyodide } from '@/lib/runRuntimes';
+import ChatBox from "./components/ChatBox";
 
 export default function Page() {
   const { fileId, projectId } = useParams();
@@ -90,48 +91,54 @@ export default function Page() {
   }
 
   return (
-    <main 
-      ref={containerRef}
-      className="h-full flex flex-col overflow-hidden"
-      style={{ userSelect: isResizing ? 'none' : 'auto' }}
-    >
-      {/* Editor Section */}
-      <div 
-        className="flex-1 overflow-hidden"
-        style={{ height: `calc(100% - ${terminalHeight}px)` }}
+    <main className="h-full flex overflow-hidden">
+      <section
+        ref={containerRef}
+        className="flex-1 min-w-0 flex flex-col overflow-hidden"
+        style={{ userSelect: isResizing ? 'none' : 'auto' }}
       >
-        <RealTimeEditor 
-          ref={editorRef}
-          fileId={fileId} 
-          fileName={fileData?.name || 'untitled.js'}
-          projectId={projectId}
-          onCodeChange={setCurrentCode}
-          onLanguageChange={setCurrentLanguage}
-        />
-      </div>
-
-      {/* Resizer */}
-      <div
-        onMouseDown={handleMouseDown}
-        className="h-1 bg-[#2f3438] hover:bg-blue-500 cursor-row-resize transition-colors relative group"
-      >
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="w-12 h-1 bg-[#3e3e42] rounded-full group-hover:bg-blue-500 transition-colors"></div>
+        {/* Editor Section */}
+        <div
+          className="flex-1 overflow-hidden"
+          style={{ height: `calc(100% - ${terminalHeight}px)` }}
+        >
+          <RealTimeEditor
+            ref={editorRef}
+            fileId={fileId}
+            fileName={fileData?.name || "untitled.js"}
+            projectId={projectId}
+            onCodeChange={setCurrentCode}
+            onLanguageChange={setCurrentLanguage}
+          />
         </div>
-      </div>
 
-      {/* Terminal Section */}
-      <div 
-        className="overflow-hidden bg-[#1e1e1e]"
-        style={{ height: `${terminalHeight}px` }}
-      >
-        <Terminal 
-          ref={terminalRef}
-          code={currentCode}
-          language={currentLanguage}
-          fileName={fileData?.name || 'untitled.js'}
-        />
-      </div>
+        {/* Resizer */}
+        <div
+          onMouseDown={handleMouseDown}
+          className="h-1 bg-[#2f3438] hover:bg-blue-500 cursor-row-resize transition-colors relative group"
+        >
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-12 h-1 bg-[#3e3e42] rounded-full group-hover:bg-blue-500 transition-colors"></div>
+          </div>
+        </div>
+
+        {/* Terminal Section */}
+        <div
+          className="overflow-hidden bg-[#1e1e1e]"
+          style={{ height: `${terminalHeight}px` }}
+        >
+          <Terminal
+            ref={terminalRef}
+            code={currentCode}
+            language={currentLanguage}
+            fileName={fileData?.name || "untitled.js"}
+          />
+        </div>
+      </section>
+
+      <aside className="w-[360px] shrink-0 border-l border-[#2f3438] bg-[#111315]">
+        <ChatBox />
+      </aside>
     </main>
   );
 }
