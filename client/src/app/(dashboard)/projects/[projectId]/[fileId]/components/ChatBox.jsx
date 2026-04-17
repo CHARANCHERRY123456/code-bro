@@ -1,30 +1,47 @@
 "use client";
 
 import axios from "axios";
-import { useState } from "react";
+import { useState , useEffect , useRef} from "react";
 
 export default function ChatBox() {
     const [messages , setMessages] = useState([]);
     const [input , setInput] = useState("what is the higest temparature recorded in the andhra pradesh");
     const [loading , setLoading] = useState(false);
+    const messageEndRef = useRef(null);
+
+
+    useEffect(()=>{
+        messageEndRef.current?.scrollIntoView({behaviour : "smooth"})
+    } , [messages])
 
     const sendMessage = async () => {
-        if(!input) return;  
-        console.log("sending the message" , input);
-        const user_message = {role : "user" , text : input};
+        if(!input.trim() || loading) return;  
+        const prompt = input;
+        console.log("sending the message" , prompt);
+        const user_message = {role : "user" , text : prompt};
         setMessages((prev)=>[...prev , user_message])
-        
-        const res = await axios.post("/api/gemini" , {
-            prompt : input
-        })
-        console.log(res.data.text);
-        
-        const bot_message = {role : "bot" , text : res.data.text};
-        setMessages((prev)=>[...prev , bot_message]);
-
         setInput("");
+        
+        try {
+            setLoading(true);
+            const res = await axios.post("/api/gemini" , {
+                prompt
+            })            
+            const bot_message = {role : "bot" , text : res.data.text};
+            setMessages((prev)=>[...prev , bot_message]);
+        } catch (error) {
+            console.error("Error message : " ,error);
+        } finally {
+            setLoading(false);
+        }
     }
 
+    const handleKeyDown = (e) => {
+        if(e.key === "Enter") { 
+            e.preventDefault();
+            sendMessage();
+        }
+    }
 
   return (
     <div className="h-full flex flex-col bg-[#0f1115] text-gray-200">
@@ -55,6 +72,8 @@ export default function ChatBox() {
                     {msg.role}
                   </p>
                   <p className="whitespace-pre-wrap break-words">{msg.text}</p>
+
+                  <div ref={messageEndRef} />
                 </div>
             </div>
         ))}
@@ -64,14 +83,17 @@ export default function ChatBox() {
           type="text"
           value={input}
           onChange={(e)=>{setInput(e.target.value)}}
+          onKeyDown={handleKeyDown}
           placeholder="Ask the assistant..."
           className="mb-2 w-full rounded-md border border-[#323844] bg-[#0f1115] px-3 py-2 text-sm text-gray-100 outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
         />
         <button
+          type="button"
           onClick={sendMessage}
-          className="w-full rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-blue-500 active:bg-blue-700"
+          disabled={loading}
+          className="w-full rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-blue-500 active:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-70"
         >
-          Send
+          {loading ? "Sending..." : "Send"}
         </button>
       </div>
      
