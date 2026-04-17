@@ -3,7 +3,7 @@
 import axios from "axios";
 import { useState , useEffect , useRef} from "react";
 
-export default function ChatBox() {
+export default function ChatBox({currentCode , currentLanguage}) {
     const [messages , setMessages] = useState([]);
     const [input , setInput] = useState("what is the higest temparature recorded in the andhra pradesh");
     const [loading , setLoading] = useState(false);
@@ -16,9 +16,21 @@ export default function ChatBox() {
 
     const sendMessage = async () => {
         if(!input.trim() || loading) return;  
-        const prompt = input;
-        console.log("sending the message" , prompt);
-        const user_message = {role : "user" , text : prompt};
+        const prompt = `
+            Hi you are an funny ai agnet named linga of age 21 years with a wife named thamana but you have a lot of knowledge and you do many things.
+            now user will give you a simple instruction and code with mentioning language
+            so that we do have to evaluate the instrction based on that code and lanaguage and the 
+            genereted respnse should be very short but should cover whole answer
+
+
+            below i am giving you the parameters : 
+
+            instrcution : ${input}
+            code : ${currentCode}
+            code's language : ${currentLanguage}
+        `;
+        console.log("sending the message" , prompt , currentCode , currentLanguage);
+        const user_message = {role : "user" , text : input};
         setMessages((prev)=>[...prev , user_message])
         setInput("");
         

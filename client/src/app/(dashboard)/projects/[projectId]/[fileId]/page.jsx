@@ -137,7 +137,7 @@ export default function Page() {
       </section>
 
       <aside className="w-[360px] shrink-0 border-l border-[#2f3438] bg-[#111315]">
-        <ChatBox />
+        <ChatBox currentCode={currentCode} currentLanguage={currentLanguage} />
       </aside>
     </main>
   );
