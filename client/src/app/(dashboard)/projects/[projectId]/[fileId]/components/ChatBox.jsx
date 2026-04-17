@@ -1,14 +1,80 @@
 "use client";
 
+import axios from "axios";
+import { useState } from "react";
+
 export default function ChatBox() {
+    const [messages , setMessages] = useState([]);
+    const [input , setInput] = useState("what is the higest temparature recorded in the andhra pradesh");
+    const [loading , setLoading] = useState(false);
+
+    const sendMessage = async () => {
+        if(!input) return;  
+        console.log("sending the message" , input);
+        const user_message = {role : "user" , text : input};
+        setMessages((prev)=>[...prev , user_message])
+        
+        const res = await axios.post("/api/gemini" , {
+            prompt : input
+        })
+        console.log(res.data.text);
+        
+        const bot_message = {role : "bot" , text : res.data.text};
+        setMessages((prev)=>[...prev , bot_message]);
+
+        setInput("");
+    }
+
+
   return (
-    <div className="h-full flex flex-col">
-      <div className="px-4 py-3 border-b border-[#2f3438]">
-        <h2 className="text-sm font-semibold text-gray-200">AI Chat</h2>
+    <div className="h-full flex flex-col bg-[#0f1115] text-gray-200">
+      <div className="px-4 py-3 border-b border-[#2f3438] bg-[#151922]">
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-semibold tracking-wide text-gray-100">AI Assistant</h2>
+          <span className="rounded-full border border-emerald-400/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-emerald-300">
+            Connected
+          </span>
+        </div>
       </div>
-      <div className="flex-1 overflow-y-auto p-4 text-sm text-gray-400">
-        Start a conversation here.
+      <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
+        {messages.length === 0 && (
+          <div className="rounded-lg border border-dashed border-[#2f3438] bg-[#14181f] p-3 text-xs leading-5 text-gray-400">
+            Ask anything about your code or project context. Responses will appear here.
+          </div>
+        )}
+        {messages.map((msg , i)=>(
+            <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+                <div
+                  className={`max-w-[92%] rounded-xl px-3 py-2 text-xs leading-relaxed shadow-sm ${
+                    msg.role === "user"
+                      ? "bg-blue-600 text-white"
+                      : "bg-[#1b1f2a] border border-[#2f3438] text-gray-200"
+                  }`}
+                >
+                  <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide opacity-70">
+                    {msg.role}
+                  </p>
+                  <p className="whitespace-pre-wrap break-words">{msg.text}</p>
+                </div>
+            </div>
+        ))}
       </div>
+      <div className="border-t border-[#2f3438] bg-[#151922] p-3">
+        <input
+          type="text"
+          value={input}
+          onChange={(e)=>{setInput(e.target.value)}}
+          placeholder="Ask the assistant..."
+          className="mb-2 w-full rounded-md border border-[#323844] bg-[#0f1115] px-3 py-2 text-sm text-gray-100 outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+        />
+        <button
+          onClick={sendMessage}
+          className="w-full rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-blue-500 active:bg-blue-700"
+        >
+          Send
+        </button>
+      </div>
+     
     </div>
   );
 }
