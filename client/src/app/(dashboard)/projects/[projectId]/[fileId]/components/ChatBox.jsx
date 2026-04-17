@@ -5,17 +5,20 @@ import { useState , useEffect , useRef} from "react";
 
 export default function ChatBox({currentCode , currentLanguage}) {
     const [messages , setMessages] = useState([]);
-    const [input , setInput] = useState("what is the higest temparature recorded in the andhra pradesh");
     const [loading , setLoading] = useState(false);
     const messageEndRef = useRef(null);
+    const inputRef = useRef(null);
 
 
     useEffect(()=>{
-        messageEndRef.current?.scrollIntoView({behaviour : "smooth"})
-    } , [messages])
-
+        messageEndRef.current?.scrollIntoView({behavior : "smooth"})
+    } , [messages])    
     const sendMessage = async () => {
-        if(!input.trim() || loading) return;  
+        const inputValue = inputRef.current?.value ?? "";
+        if(!inputValue.trim() || loading) return;        
+        const historyText = messages
+            .map((m) => `${m.role}: ${m.text}`)
+            .join("\n");
         const prompt = `
             Hi you are an funny ai agnet named linga of age 21 years with a wife named thamana but you have a lot of knowledge and you do many things.
             now user will give you a simple instruction and code with mentioning language
@@ -25,19 +28,19 @@ export default function ChatBox({currentCode , currentLanguage}) {
 
             below i am giving you the parameters : 
 
-            instrcution : ${input}
+            instrcution : ${inputValue}
             code : ${currentCode}
             code's language : ${currentLanguage}
+            history : ${historyText}
         `;
-        console.log("sending the message" , prompt , currentCode , currentLanguage);
-        const user_message = {role : "user" , text : input};
+        const user_message = {role : "user" , text : inputValue};
         setMessages((prev)=>[...prev , user_message])
-        setInput("");
+        if (inputRef.current) inputRef.current.value = "";
         
         try {
             setLoading(true);
             const res = await axios.post("/api/gemini" , {
-                prompt
+                prompt,
             })            
             const bot_message = {role : "bot" , text : res.data.text};
             setMessages((prev)=>[...prev , bot_message]);
@@ -84,17 +87,16 @@ export default function ChatBox({currentCode , currentLanguage}) {
                     {msg.role}
                   </p>
                   <p className="whitespace-pre-wrap break-words">{msg.text}</p>
-
-                  <div ref={messageEndRef} />
                 </div>
             </div>
         ))}
+        <div ref={messageEndRef} />
       </div>
       <div className="border-t border-[#2f3438] bg-[#151922] p-3">
         <input
+          ref={inputRef}
           type="text"
-          value={input}
-          onChange={(e)=>{setInput(e.target.value)}}
+          defaultValue="what is the higest temparature recorded in the andhra pradesh"
           onKeyDown={handleKeyDown}
           placeholder="Ask the assistant..."
           className="mb-2 w-full rounded-md border border-[#323844] bg-[#0f1115] px-3 py-2 text-sm text-gray-100 outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
